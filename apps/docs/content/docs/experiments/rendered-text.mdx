@@ -1,0 +1,162 @@
+---
+title: "Rendered Text"
+description: "Extract JavaScript-rendered visible text with Cloudflare Browser Rendering - SPA text scrape for search and AI ingestion"
+tags:
+  - browser
+  - scraping
+  - text-extraction
+  - spa
+  - browser-rendering
+  - llms
+bindings:
+  - BROWSER
+---
+
+Load any URL in a headless browser and extract the visible page text after JavaScript has executed.
+
+## API Reference
+
+### GET /text
+
+Returns the document title and normalized visible text from `document.body.innerText`.
+
+<TypeTable
+  type={{
+    url: {
+      description: "The website URL to extract text from (must be http or https)",
+      type: "string",
+      required: true,
+    },
+  }}
+/>
+
+#### Example Request
+
+```bash
+curl "https://your-worker.workers.dev/text?url=https://www.cloudflare.com"
+```
+
+#### Success Response
+
+**`url`** `string`
+
+The normalized URL that was loaded
+
+**`title`** `string`
+
+The page `<title>` after rendering
+
+**`text`** `string`
+
+Visible text with whitespace collapsed
+
+**`textLength`** `number`
+
+Length of the returned text in characters
+
+**`truncated`** `boolean`
+
+Whether the text was truncated at 50,000 characters
+
+```json
+{
+  "url": "https://www.cloudflare.com/",
+  "title": "Connect, protect, and build everywhere",
+  "text": "Connect, protect, and build everywhere ...",
+  "textLength": 1234,
+  "truncated": false
+}
+```
+
+#### Error Response
+
+```json
+{
+  "error": "Missing or invalid query parameter: url",
+  "code": "INVALID_URL"
+}
+```
+
+#### Error Codes
+
+- `400` - Missing or invalid `url` parameter
+- `502` - Navigation or extraction failed (`RENDER_ERROR`)
+
+## Use Cases
+
+- Scrape single-page apps and client-rendered content
+- Feed rendered page text to LLM pipelines
+- Compare static fetch vs browser-rendered output
+- Build search indexes for JavaScript-heavy sites
+
+## Limitations
+
+- Requires Browser Rendering enabled on your Cloudflare account
+- Local development needs `npx wrangler dev --remote`
+- Extracted text is truncated at a maximum length
+- Navigation timeout on slow or script-heavy pages
+
+## Use in your project
+
+<UseInYourProject
+  experiment="rendered-text"
+  bindings={["Browser Rendering"]}
+  platform={["Workers runtime"]}
+  files={[
+    "src/lib/browser.ts",
+    "src/lib/text.ts",
+    "src/lib/url.ts",
+    "src/constants/defaults.ts",
+    "examples/usage.ts",
+  ]}
+/>
+
+## Deployment
+
+<Steps>
+  <Step>
+
+### Click the deploy button
+
+    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/shrinathsnayak/cloudflare-experiments/tree/main/apps/experiments/rendered-text)
+
+  </Step>
+
+  <Step>
+
+### Enable Browser Rendering
+
+    Browser Rendering must be enabled on your account.
+
+  </Step>
+
+  <Step>
+
+### Test your deployment
+
+    ```bash
+    curl "https://your-worker.workers.dev/text?url=https://www.cloudflare.com"
+    ```
+
+  </Step>
+</Steps>
+
+## Local Development
+
+```bash
+cd apps/experiments/rendered-text
+npm install
+npm run dev
+```
+
+Test locally:
+
+```bash
+curl "http://localhost:8787/text?url=https://www.cloudflare.com"
+```
+
+## Cloudflare Features Used
+
+- **[Workers](https://developers.cloudflare.com/workers/)** - Edge compute runtime
+- **[Browser Rendering](https://developers.cloudflare.com/browser-rendering/)** - Headless Chromium via `@cloudflare/puppeteer`
+- **[Puppeteer DOM evaluation](https://developers.cloudflare.com/browser-rendering/platform/puppeteer/)** - Extract rendered text after `networkidle0`

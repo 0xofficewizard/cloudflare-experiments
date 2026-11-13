@@ -1,0 +1,153 @@
+---
+title: "Page Metrics"
+description: "Collect Puppeteer page-load metrics with Cloudflare Browser Rendering - Core Web Vitals-style timing from the edge"
+tags:
+  - browser
+  - performance
+  - metrics
+  - puppeteer
+  - web-vitals
+  - browser-rendering
+bindings:
+  - BROWSER
+---
+
+Navigate to any URL in a headless browser and return Puppeteer page load metrics as JSON.
+
+## API Reference
+
+### GET /metrics
+
+Loads the page and returns metrics from `page.metrics()`.
+
+<TypeTable
+  type={{
+    url: {
+      description: "The website URL to measure (must be http or https)",
+      type: "string",
+      required: true,
+    },
+  }}
+/>
+
+#### Example Request
+
+```bash
+curl "https://your-worker.workers.dev/metrics?url=https://www.cloudflare.com"
+```
+
+#### Success Response
+
+**`url`** `string`
+
+The normalized URL that was measured
+
+**`metrics`** `object`
+
+Puppeteer metrics such as `Nodes`, `LayoutCount`, `ScriptDuration`, and `JSHeapUsedSize`
+
+```json
+{
+  "url": "https://www.cloudflare.com/",
+  "metrics": {
+    "Timestamp": 12345.678,
+    "Documents": 1,
+    "Nodes": 842,
+    "LayoutCount": 12,
+    "ScriptDuration": 0.234,
+    "JSHeapUsedSize": 1048576
+  }
+}
+```
+
+#### Error Response
+
+```json
+{
+  "error": "Missing or invalid query parameter: url",
+  "code": "INVALID_URL"
+}
+```
+
+#### Error Codes
+
+- `400` - Missing or invalid `url` parameter
+- `502` - Navigation or metrics collection failed (`METRICS_ERROR`)
+
+## Use Cases
+
+- Measure DOM complexity and script cost after full page load
+- Compare client-side rendering overhead across sites
+- Debug performance issues that only appear in a real browser
+- Learn Puppeteer metrics collection on Workers
+
+## Limitations
+
+- Requires Browser Rendering enabled on your Cloudflare account
+- Local development needs `npx wrangler dev --remote`
+- Metrics reflect one page load at a fixed 1280×800 viewport
+- Navigation timeout may fail on heavy single-page applications
+
+## Use in your project
+
+<UseInYourProject
+  experiment="page-metrics"
+  bindings={["Browser Rendering"]}
+  platform={["Workers runtime"]}
+  files={[
+    "src/lib/browser.ts",
+    "src/lib/url.ts",
+    "src/constants/defaults.ts",
+    "examples/usage.ts",
+  ]}
+/>
+
+## Deployment
+
+<Steps>
+  <Step>
+
+### Click the deploy button
+
+    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/shrinathsnayak/cloudflare-experiments/tree/main/apps/experiments/page-metrics)
+
+  </Step>
+
+  <Step>
+
+### Enable Browser Rendering
+
+    Browser Rendering must be enabled on your account.
+
+  </Step>
+
+  <Step>
+
+### Test your deployment
+
+    ```bash
+    curl "https://your-worker.workers.dev/metrics?url=https://www.cloudflare.com"
+    ```
+
+  </Step>
+</Steps>
+
+## Local Development
+
+```bash
+cd apps/experiments/page-metrics
+npm install
+npm run dev
+```
+
+Test locally:
+
+```bash
+curl "http://localhost:8787/metrics?url=https://www.cloudflare.com"
+```
+
+## Cloudflare Features Used
+
+- **[Workers](https://developers.cloudflare.com/workers/)** - Edge compute runtime
+- **[Browser Rendering](https://developers.cloudflare.com/browser-rendering/)** - Headless Chromium via `@cloudflare/puppeteer`
+- **[Puppeteer `page.metrics()`](https://developers.cloudflare.com/browser-rendering/platform/puppeteer/)** - Page load and memory metrics

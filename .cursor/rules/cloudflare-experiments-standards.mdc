@@ -1,0 +1,82 @@
+---
+description: Repo philosophy and folder structure for Cloudflare Experiments
+alwaysApply: true
+---
+
+# Cloudflare Experiments Standards
+
+## Philosophy
+
+- **Product-first**: Each experiment demonstrates one specific **Cloudflare product or platform capability** (Workers AI, D1, R2, Durable Objects, Browser Rendering, Access, Email, Turnstile, Stream, Queues, …). This catalog covers **most Cloudflare products**, not Workers alone.
+- **Workers as the usual vehicle**: Experiments typically ship as Cloudflare Workers that wire those products together at the edge. Prefer that packaging unless the product requires a different surface.
+- **Edge-first**: Prefer edge execution; low latency, global reach.
+- **Stateless by default**: Prefer fetch + in-memory processing; add KV/D1/R2/etc. when the product experiment needs them.
+- **Under 60 seconds**: Each request path should complete within ~60 seconds.
+- **Single responsibility**: One experiment, one Cloudflare capability.
+
+## Monorepo layout
+
+This repo is a **Turborepo** monorepo under `apps/`:
+
+- `apps/docs/` - Fumadocs documentation site (Next.js)
+- `apps/experiments/<name>/` - Independently deployable product experiments (usually Workers)
+
+Run from the repo root:
+
+- `npm install` - install all workspace dependencies
+- `npm run build` - build all packages via Turborepo
+- `npm run test` - run tests in all experiments
+- `npm run dev -- --filter=<name>` - dev a single experiment or `--filter=docs` for the docs site
+
+## Folder Structure
+
+Every experiment lives under `apps/experiments/<name>/`. Use this layout only; do not add extra top-level dirs (e.g. no `app/`, `server/`).
+
+### Required layout
+
+```
+apps/experiments/<name>/
+├── src/
+│   ├── index.ts          # Entry: Hono app, mount routes, export default { fetch: app.fetch }
+│   ├── routes/           # Route handlers only (one file per route or logical group)
+│   ├── lib/              # Domain helpers (e.g. fetch, url validation, parsing)
+│   ├── utils/            # Generic helpers (response helpers, formatters)
+│   ├── constants/        # Constants and config (optional)
+│   └── types/            # All types; env in env.d.ts
+├── test/                 # Required: Vitest tests (smoke + unit/route tests as needed)
+│   ├── smoke.test.ts     # At least one smoke test (GET / returns 200 + app info)
+│   └── ...               # Optional: test/lib/*.test.ts, test/routes/*.test.ts
+├── vitest.config.ts      # Required when adding a new experiment
+├── package.json          # Must include "test": "vitest run", "test:watch": "vitest", devDep "vitest"
+├── wrangler.json         # Or wrangler.json; bindings declared here
+├── tsconfig.json         # Include "test/**/*.ts" in include
+└── README.md
+```
+
+### New experiments: test and Prettier (main rule)
+
+When creating or scaffolding a **new experiment**, always:
+
+1. **Test setup**: Include a `test/` directory with Vitest (`vitest.config.ts`, `test` and `test:watch` scripts in `package.json`, devDependency `vitest`). Add at least `test/smoke.test.ts` that asserts `GET /` returns 200 and JSON with `name` and `description`. Add unit tests for `src/lib/` and `src/utils/` and route tests via `worker.fetch(new Request(...))` as needed; mock external or binding-dependent code with `vi.mock(...)`.
+2. **Prettier**: Use the **repo root** Prettier config only. Run `npm run format` (and `npm run format:check`) from the repository root; do not add a separate `.prettierrc` or Prettier config inside the experiment. New experiment code must be formatted with root Prettier before commit/PR.
+
+### Directory purposes
+
+| Directory        | Purpose                                                                         | Do not put here                   |
+| ---------------- | ------------------------------------------------------------------------------- | --------------------------------- |
+| `src/routes/`    | Route handlers; thin layer that validate input, call lib/utils, return response | Business logic, types             |
+| `src/lib/`       | Domain logic: fetch wrappers, URL validation, HTML/API parsing                  | Response formatting, Hono helpers |
+| `src/utils/`     | Shared helpers: `jsonError`, `jsonSuccess`, small pure helpers                  | Domain-specific logic             |
+| `src/constants/` | Literals, config (e.g. model names, timeouts)                                   | Types                             |
+| `src/types/`     | All `type`/`interface`; `env.d.ts` for Worker bindings                          | Implementation                    |
+
+### File naming
+
+- **Routes**: `kebab-case.ts` matching the path (e.g. `check.ts` for `/check`, `screenshot.ts` for `/screenshot`).
+- **Types**: `env.d.ts` for bindings; other files named by domain (e.g. `check.ts`, `api.ts`).
+- **Lib/utils**: `url.ts`, `fetch.ts`, `response.ts` - one concern per file.
+
+### Config and isolation
+
+- Use **wrangler.json** per experiment; declare bindings there and type them in `src/types/env.d.ts`.
+- **No shared code between experiments**: Each experiment is a standalone package with its own `package.json` and dependencies. Do not import from other experiments or from repo root.

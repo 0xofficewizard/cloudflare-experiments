@@ -1,0 +1,238 @@
+---
+title: "URL DNS Lookup"
+description: "DNS lookup for any URL's hostname via Cloudflare DNS-over-HTTPS (1.1.1.1) - A, AAAA, MX, TXT, and more from a Worker"
+tags:
+  - network
+  - dns
+  - doh
+  - lookup
+  - 1.1.1.1
+  - records
+---
+
+Retrieve all DNS record types for any URL's hostname using Cloudflare's DNS over HTTPS (DoH) API.
+
+## API Reference
+
+### GET /dns
+
+Extracts the hostname from the provided URL and returns all available DNS records.
+
+<TypeTable
+  type={{
+    url: {
+      description: "Any http or https URL. The hostname will be extracted and looked up.",
+      type: "string",
+      required: true,
+    },
+  }}
+/>
+
+#### Example Request
+
+```bash
+curl "https://your-worker.workers.dev/dns?url=https://www.cloudflare.com/page"
+```
+
+#### Success Response
+
+**`hostname`** `string`
+
+The extracted hostname that was looked up
+
+**`records`** `object`
+
+DNS records grouped by type. Only record types that exist for the hostname are included.
+
+**`A`** `array`
+
+IPv4 address records
+
+**`AAAA`** `array`
+
+IPv6 address records
+
+**`CNAME`** `array`
+
+Canonical name records
+
+**`MX`** `array`
+
+Mail exchange records
+
+**`NS`** `array`
+
+Name server records
+
+**`TXT`** `array`
+
+Text records
+
+**`SOA`** `array`
+
+Start of authority records
+
+**`CAA`** `array`
+
+Certification authority authorization records
+
+Each DNS record contains:
+
+**`name`** `string`
+
+The domain name for this record
+
+**`type`** `string`
+
+The DNS record type (A, AAAA, CNAME, etc.)
+
+**`ttl`** `number`
+
+Time to live in seconds
+
+**`data`** `string`
+
+The record data (IP address, hostname, etc.)
+
+```json
+{
+  "hostname": "example.com",
+  "records": {
+    "A": [
+      {
+        "name": "example.com",
+        "type": "A",
+        "ttl": 1726,
+        "data": "93.184.220.34"
+      }
+    ],
+    "AAAA": [
+      {
+        "name": "example.com",
+        "type": "AAAA",
+        "ttl": 1726,
+        "data": "2606:2800:220:1:248:1893:25c8:1946"
+      }
+    ],
+    "NS": [
+      {
+        "name": "example.com",
+        "type": "NS",
+        "ttl": 172800,
+        "data": "a.iana-servers.net."
+      }
+    ]
+  }
+}
+```
+
+#### Error Response
+
+```json
+{
+  "error": "Missing or invalid query parameter: url",
+  "code": "INVALID_URL"
+}
+```
+
+#### Error Codes
+
+- `400` - Missing or invalid `url` parameter (not http/https)
+- `502` - DNS lookup failed (DoH timeout or error)
+
+## Supported Record Types
+
+The API queries for the following DNS record types:
+
+- **A** - IPv4 addresses
+- **AAAA** - IPv6 addresses
+- **CNAME** - Canonical names
+- **MX** - Mail exchange servers
+- **NS** - Name servers
+- **TXT** - Text records
+- **SOA** - Start of authority
+- **CAA** - Certificate authority authorization
+
+## Implementation Details
+
+- Uses Cloudflare's public DNS over HTTPS (DoH) API
+- Queries all record types in parallel for fast responses
+- Stateless - no database or KV storage required
+- Timeout protection on DoH requests
+
+## Use Cases
+
+- Resolve DNS records for the hostname extracted from any URL
+- Debug DNS configuration during deployments or migrations
+- Build diagnostic tools without running `dig` locally
+- Verify mail (MX), certificate (CAA), or CDN (CNAME) records from the edge
+
+## Limitations
+
+- Uses the hostname only; URL path and query string are ignored
+- Queries a fixed set of record types; no PTR or SRV in this experiment
+- DoH timeout if upstream DNS is slow or unreachable
+- Results reflect public DNS; may differ from resolver-specific or split-horizon views
+
+## Use in your project
+
+<UseInYourProject
+  experiment="url-dns-lookup"
+  platform={["Fetch API"]}
+  files={[
+    "src/lib/dns.ts",
+    "src/lib/url.ts",
+    "src/constants/defaults.ts",
+    "examples/usage.ts",
+  ]}
+/>
+
+## Deployment
+
+<Steps>
+  <Step>
+
+### Click the deploy button
+
+    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/shrinathsnayak/cloudflare-experiments/tree/main/apps/experiments/url-dns-lookup)
+
+  </Step>
+  
+  <Step>
+
+### Deploy
+
+    Follow the deployment wizard to deploy the Worker to your Cloudflare account. No additional configuration or bindings required.
+
+  </Step>
+  
+  <Step>
+
+### Test your deployment
+
+    ```bash
+    curl "https://your-worker.workers.dev/dns?url=https://www.cloudflare.com"
+    ```
+
+  </Step>
+</Steps>
+
+## Local Development
+
+```bash
+cd apps/experiments/url-dns-lookup
+npm install
+npm run dev
+```
+
+Test locally:
+
+```bash
+curl "http://localhost:8787/dns?url=https://www.cloudflare.com"
+```
+
+## Cloudflare Features Used
+
+- **[Workers](https://developers.cloudflare.com/workers/)** - Edge compute runtime
+- **[Fetch API](https://developers.cloudflare.com/workers/runtime-apis/fetch/)** - HTTP requests to Cloudflare DoH
+- **[Edge network](https://developers.cloudflare.com/workers/reference/how-workers-works/)** - Low-latency DNS lookups

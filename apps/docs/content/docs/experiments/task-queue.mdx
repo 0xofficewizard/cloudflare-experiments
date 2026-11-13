@@ -1,0 +1,160 @@
+---
+title: "Task Queue"
+description: "Cloudflare Queues reference: enqueue tasks over HTTP and process them asynchronously with a consumer Worker"
+tags:
+  - stateful
+  - queues
+  - async
+  - jobs
+  - kv
+  - background
+bindings:
+  - QUEUE
+  - KV
+---
+
+A minimal reference for **Queues**: HTTP requests enqueue messages via a producer binding; a `queue()` consumer processes them in the background. KV tracks enqueue and process counts.
+
+## API Reference
+
+### POST /enqueue
+
+Enqueues a message for async processing.
+
+<TypeTable
+  type={{
+    message: {
+      description: "Task payload (max 500 characters).",
+      type: "string",
+      required: true,
+    },
+  }}
+/>
+
+#### Example Request
+
+```bash
+curl -X POST "https://your-worker.workers.dev/enqueue" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "sync analytics"}'
+```
+
+#### Example Response
+
+```json
+{
+  "queued": true,
+  "message": "sync analytics",
+  "enqueuedAt": "2025-06-20T12:00:00.000Z"
+}
+```
+
+#### Error Responses
+
+```json
+{
+  "error": "Missing or invalid message (required string, max 500 chars)",
+  "code": "INVALID_MESSAGE"
+}
+```
+
+### GET /stats
+
+Returns enqueue and process counts.
+
+```bash
+curl "https://your-worker.workers.dev/stats"
+```
+
+```json
+{
+  "enqueued": 10,
+  "processed": 8
+}
+```
+
+<Callout>
+
+`processed` may lag behind `enqueued` until the queue consumer runs. This is expected async behavior.
+
+</Callout>
+
+## Use Cases
+
+- Learn producer (`TASK_QUEUE.send`) and consumer (`queue()`) setup
+- Decouple HTTP responses from slow background work
+- Webhook delivery, email sending, or data pipeline triggers
+- Building retryable async workflows on Cloudflare
+
+## Limitations
+
+- Demo queue with basic stats; no dead-letter queue or idempotency guarantees
+- Message length is capped
+- Requires Queue and KV bindings; not a stateless Worker
+
+## Use in your project
+
+<UseInYourProject
+  experiment="task-queue"
+  bindings={["KV","Queues"]}
+  platform={["Workers runtime"]}
+  files={[
+    "src/lib/message.ts",
+    "src/lib/stats.ts",
+    "src/constants/defaults.ts",
+    "examples/usage.ts",
+  ]}
+/>
+
+## Deployment
+
+<Steps>
+  <Step>
+
+### Click the deploy button
+
+    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/shrinathsnayak/cloudflare-experiments/tree/main/apps/experiments/task-queue)
+
+  </Step>
+  <Step>
+
+### Create queue and KV
+
+    Create the `task-queue` queue and KV namespace in your Cloudflare dashboard. Update `wrangler.json` bindings.
+
+  </Step>
+  <Step>
+
+### Enqueue and check stats
+
+    ```bash
+    curl -X POST "https://your-worker.workers.dev/enqueue" \
+      -H "Content-Type: application/json" \
+      -d '{"message": "hello"}'
+    curl "https://your-worker.workers.dev/stats"
+    ```
+
+  </Step>
+</Steps>
+
+## Local Development
+
+```bash
+cd apps/experiments/task-queue
+npm install
+npm run dev
+```
+
+## Configuration
+
+`wrangler.json` declares:
+
+- **Queue producer** `TASK_QUEUE` → queue `task-queue`
+- **Queue consumer** on `task-queue` (batch size 10, 5s timeout)
+- **KV binding** `STATS` for counters
+
+## Cloudflare Features Used
+
+- **[Workers](https://developers.cloudflare.com/workers/)** - Edge compute runtime
+- **[Queues](https://developers.cloudflare.com/queues/)** - async message processing
+- **[Workers KV](https://developers.cloudflare.com/kv/)** - enqueue/process statistics

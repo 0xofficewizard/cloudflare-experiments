@@ -1,0 +1,99 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+@theme inline {
+  --font-sans: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  --color-brand: #f38020;
+}
+
+#nd-sidebar,
+#nd-sidebar-mobile,
+#nd-toc {
+  --color-fd-primary: var(--color-brand);
+  --color-fd-primary-foreground: #ffffff;
+}
+
+/* Keep title + New badge on one row in the docs sidebar */
+#nd-sidebar a:has([data-status]),
+#nd-sidebar-mobile a:has([data-status]) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Notebook auto-nav: put the sidebar collapse control on the left of the logo */
+#nd-sidebar > div:first-child > div.flex.justify-between {
+  justify-content: flex-start;
+  gap: 0.25rem;
+}
+
+#nd-sidebar > div:first-child > div.flex.justify-between > a {
+  order: 1;
+  min-width: 0;
+}
+
+#nd-sidebar > div:first-child > div.flex.justify-between > button {
+  order: 0;
+  margin-inline-end: 0.25rem;
+}
+
+/* Let the notebook nav title shrink so it truncates instead of wrapping on mobile */
+#nd-subnav [data-header-body] > div:first-child {
+  min-width: 0;
+}
+
+/* Keep main navbars sticky and fully visible on mobile (home + docs).
+   Opaque background + overflow visible avoids the sticky clip glitch when
+   the disclaimer banner above scrolls away. */
+#nd-nav,
+#nd-subnav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  align-self: flex-start;
+  width: 100%;
+  overflow: visible;
+  background-color: var(--color-fd-background);
+  /* Contain backdrop-filter to the nav bar so it can't clip sticky content */
+  isolation: isolate;
+}
+
+#nd-nav > div {
+  overflow: visible;
+}
+
+.prose {
+  font-family: var(--font-sans);
+}
+
+.prose :where(code):not(:where(pre *)),
+.prose :where(pre),
+.prose :where(kbd),
+.prose :where(samp),
+.shiki,
+.shiki code {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-feature-settings: normal;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Avoid a reserved scrollbar strip looking like an empty right gutter on mobile */
+  scrollbar-gutter: auto;
+  overflow-x: clip;
+}
+
+body {
+  background-color: var(--color-fd-background);
+  overflow-x: clip;
+}
+
+/* content-visibility on categories breaks TOC scrollspy for nested headings */
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}

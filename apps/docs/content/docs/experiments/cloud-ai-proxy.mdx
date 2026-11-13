@@ -1,0 +1,188 @@
+---
+title: "Cloud AI Proxy"
+description: "Call any Workers AI model with a prompt from one public Worker endpoint - simple edge proxy for Workers AI inference"
+tags:
+  - ai
+  - workers-ai
+  - proxy
+  - inference
+  - llm
+  - api
+bindings:
+  - AI
+---
+
+<Callout type="warning">
+
+This is an experimental Worker. Use it as a starting point for your own projects.
+
+</Callout>
+
+The Cloud AI Proxy experiment exposes [Workers AI](https://developers.cloudflare.com/workers-ai/) through a single public endpoint. You pass a model ID and prompt (or chat messages) and receive AI-generated text. Use it to try different models or integrate Workers AI from external tools without managing Wrangler or bindings yourself.
+
+<Callout>
+
+The endpoint is public by design. For production use, add rate limiting or API key authentication.
+
+</Callout>
+
+## Features
+
+- Call any Workers AI text-generation model via one endpoint
+- Support for single prompt or chat-style messages
+- Optional `max_tokens` control
+- POST (JSON) and GET (query params) interfaces
+- No external API keys; uses your Cloudflare account’s Workers AI
+
+## API Reference
+
+### POST /chat
+
+Send a JSON body with model and prompt or messages.
+
+| Field        | Required | Description                                                       |
+| ------------ | -------- | ----------------------------------------------------------------- |
+| `model`      | Yes      | Workers AI model ID (e.g. `@cf/meta/llama-3.1-8b-instruct-fast`)  |
+| `prompt`     | No\*     | Single prompt string                                              |
+| `messages`   | No\*     | Array of `{ role: string, content: string }` for chat-style input |
+| `max_tokens` | No       | Max tokens to generate (1–4096)                                   |
+
+\*At least one of `prompt` or `messages` is required.
+
+**`response`** `string`
+
+The AI-generated text.
+
+#### Example Request
+
+```bash
+curl -X POST https://your-worker.workers.dev/chat \
+  -H "Content-Type: application/json" \
+  -d '{"model":"@cf/meta/llama-3.1-8b-instruct-fast","prompt":"Say hello in one sentence."}'
+```
+
+#### Example Response
+
+```json
+{
+  "response": "Hello! How can I help you today?"
+}
+```
+
+### GET /chat
+
+Query params: `model` (required), `prompt` (required), optional `max_tokens`.
+
+<TypeTable
+  type={{
+    model: {
+      description: "Workers AI model ID (e.g. `@cf/meta/llama-3.1-8b-instruct-fast`).",
+      type: "string",
+      required: true,
+    },
+    prompt: {
+      description: "The prompt text. URL-encoded.",
+      type: "string",
+      required: true,
+    },
+  }}
+/>
+
+#### Example Request
+
+```bash
+curl "https://your-worker.workers.dev/chat?model=@cf/meta/llama-3.1-8b-instruct-fast&prompt=Say%20hello"
+```
+
+#### Error Responses
+
+- **400 Bad Request** - `INVALID_BODY`, `MISSING_MODEL`, `MISSING_PROMPT`, or `INVALID_MAX_TOKENS`
+- **502 Bad Gateway** - `AI_ERROR` (model run failed)
+
+## Use Cases
+
+- Try Workers AI models from curl, Postman, or external tools without managing bindings
+- Prototype chat APIs before adding authentication and rate limiting
+- Compare model outputs by swapping the `model` parameter
+- Integrate edge AI into apps via a simple HTTP proxy
+
+## Limitations
+
+- Public endpoint with no authentication or rate limiting by default
+- Workers AI is subject to [usage limits](https://developers.cloudflare.com/workers-ai/platform/limits/) by plan
+- `max_tokens` is capped at 4096
+- Text generation only; no streaming responses or tool calling
+
+## Use in your project
+
+<UseInYourProject
+  experiment="cloud-ai-proxy"
+  bindings={["Workers AI (AI binding)"]}
+  platform={["Workers AI"]}
+  files={[
+    "src/lib/chat.ts",
+    "src/lib/validate.ts",
+    "src/constants/defaults.ts",
+    "examples/usage.ts",
+  ]}
+/>
+
+## Deployment
+
+<Steps>
+  <Step>
+
+### Click the deploy button
+
+    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/shrinathsnayak/cloudflare-experiments/tree/main/apps/experiments/cloud-ai-proxy)
+
+  </Step>
+
+  <Step>
+
+### Deploy
+
+    Enable the **Workers AI** binding (`AI`) in your Worker settings. The deploy button configures this automatically via `wrangler.json`. Requires a Cloudflare account with Workers AI enabled.
+
+  </Step>
+
+  <Step>
+
+### Test your deployment
+
+    ```bash
+    curl -X POST "https://your-worker.workers.dev/chat" \
+      -H "Content-Type: application/json" \
+      -d '{"model":"@cf/meta/llama-3.1-8b-instruct-fast","prompt":"Say hello in one sentence."}'
+    ```
+
+  </Step>
+</Steps>
+
+## Local Development
+
+```bash
+cd apps/experiments/cloud-ai-proxy
+npm install
+npm run dev
+```
+
+Call the endpoint at `http://localhost:8787/chat` with POST (JSON body) or GET (query params). Requires a Cloudflare account with Workers AI enabled.
+
+## Cloudflare Features Used
+
+- **[Workers](https://developers.cloudflare.com/workers/)** - Edge runtime
+- **[Workers AI](https://developers.cloudflare.com/workers-ai/)** - `AI` binding for text generation
+
+## Next Steps
+
+<Cards>
+  <Card
+    title="Workers AI models"
+    href="https://developers.cloudflare.com/workers-ai/models/"
+  ></Card>
+  <Card
+    title="GitHub repository"
+    href="https://github.com/shrinathsnayak/cloudflare-experiments/tree/main/apps/experiments/cloud-ai-proxy"
+  ></Card>
+</Cards>

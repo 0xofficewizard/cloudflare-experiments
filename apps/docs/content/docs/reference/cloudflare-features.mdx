@@ -1,0 +1,314 @@
+---
+title: Cloudflare Features
+description: Overview of Cloudflare platform features used across experiments
+---
+
+The experiments in this repository demonstrate various Cloudflare platform features. Each feature enables developers to build powerful applications that run at the edge, close to users worldwide.
+
+## Core Features
+
+<Cards>
+  <Card title="Cloudflare Workers">
+    **Edge compute platform** that runs JavaScript/TypeScript on Cloudflare's global network.
+    
+    All experiments run on Workers, providing:
+    - Global deployment in 300+ cities
+    - Sub-millisecond cold starts
+    - Zero-config scaling
+    - Request/Response manipulation
+    - Standard Web APIs (fetch, URL, etc.)
+    
+    Used in: All experiments
+  </Card>
+
+<Card title="Workers AI">
+  **Serverless AI inference** at the edge with built-in models. Run language models directly from
+  Workers: - Text generation and summarization - No GPU infrastructure required - Pay-per-inference
+  pricing - Multiple model options Used in: - [AI Website Summary](/experiments/ai-website-summary)
+  - [GitHub Repo Explainer](/experiments/github-repo-explainer) - [Cloud AI
+  Proxy](/experiments/cloud-ai-proxy)
+</Card>
+
+  <Card title="Browser Rendering">
+    **Headless browser** automation powered by Puppeteer on the edge.
+
+    Capture screenshots, generate PDFs, and interact with web pages:
+    - Full Chrome browser in Workers
+    - Screenshot and PDF generation
+    - Page metrics and DOM evaluation
+    - No browser infrastructure to manage
+
+    Used in:
+    - [Screenshot API](/experiments/screenshot-api)
+    - [PDF API](/experiments/pdf-api)
+    - [Page Metrics](/experiments/page-metrics)
+    - [Rendered Text](/experiments/rendered-text)
+    - [Browser Links](/experiments/browser-links)
+
+  </Card>
+
+  <Card title="HTMLRewriter">
+    **Streaming HTML parser** for transforming HTML on the fly.
+    
+    Parse and extract data from HTML without buffering:
+    - Streaming HTML transformation
+    - CSS selector-based parsing
+    - Low memory overhead
+    - Regex-based extraction patterns
+    
+    Used in:
+    - [Dependency Analyzer](/experiments/dependency-analyzer)
+    - [Website Metadata Extractor](/experiments/website-metadata-extractor)
+    - [Website DevTools Inspector](/experiments/website-devtools-inspector)
+    - [Website to API](/experiments/website-to-api)
+  </Card>
+</Cards>
+
+## Storage Features
+
+<Cards>
+  <Card title="D1 (SQL Database)">
+    **SQLite database** at the edge with global replication.
+    
+    Serverless SQL for relational data:
+    - SQLite syntax and compatibility
+    - Automatic backups
+    - Read replication
+    - Schema migrations
+    - Low-latency queries from edge
+    
+    Used in:
+    - [Link Shortener](/experiments/link-shortener) (primary storage)
+  </Card>
+
+  <Card title="Workers KV">
+    **Global key-value store** optimized for high-read workloads.
+
+    Distributed KV storage:
+    - Eventually consistent reads
+    - Global edge caching
+    - TTL support
+    - Ideal for read-heavy caching
+
+    Used in:
+    - [Link Shortener](/experiments/link-shortener) (read-through cache)
+    - [Cron Heartbeat](/experiments/cron-heartbeat) (scheduled run metadata)
+    - [Task Queue](/experiments/task-queue) (enqueue/process stats)
+    - [KV Notes](/experiments/kv-notes) (primary storage)
+
+  </Card>
+
+  <Card title="R2 Storage">
+    **Object storage** compatible with S3 APIs, with zero egress fees.
+    
+    Store files and assets:
+    - S3-compatible API
+    - No egress charges
+    - Public and private buckets
+    - Custom metadata support
+    - Ideal for images, videos, files
+    
+    Used in:
+    - [R2 Storage](/experiments/r2-storage)
+  </Card>
+</Cards>
+
+## Stateful & Async Features
+
+<Cards>
+  <Card title="Durable Objects">
+    **Strongly consistent state** at the edge. Single-threaded objects with persistent storage for
+    coordination, counters, sessions, and real-time apps.
+
+    Used in:
+    - [Durable Counter](/experiments/durable-counter)
+
+  </Card>
+
+  <Card title="Cron Triggers">
+    **Scheduled Workers** that run on a cron schedule without external schedulers.
+
+    Used in:
+    - [Cron Heartbeat](/experiments/cron-heartbeat)
+
+  </Card>
+
+  <Card title="Queues">
+    **Asynchronous message processing** between Workers. Decouple HTTP requests from background
+    work with producer/consumer handlers.
+
+    Used in:
+    - [Task Queue](/experiments/task-queue)
+
+  </Card>
+</Cards>
+
+## Network Features
+
+<Cards>
+  <Card title="Edge Networking">
+    **Global network** with advanced request handling.
+    
+    Access network-level information:
+    - Geolocation data (country, city, region)
+    - Data center (colo) information
+    - Request metadata
+    - TLS/SSL information
+    
+    Used in:
+    - [Where Am I](/experiments/whereami)
+    - [Is It Down](/experiments/is-it-down)
+    - [Response Headers](/experiments/response-headers)
+  </Card>
+
+<Card title="Fetch API">
+  **Standards-based HTTP client** with edge optimizations. Make HTTP requests from the edge: -
+  Standard Web Fetch API - Automatic retries and failover - Connection pooling - Header manipulation
+  Used in: Most experiments for fetching external content
+</Card>
+
+  <Card title="Cache API">
+    **Edge response cache** for storing fetch responses in the same colo.
+
+    Cache origin responses with `caches.default`:
+    - Read-through caching patterns
+    - Per-colo cache storage
+    - TTL via response headers
+
+    Used in:
+    - [Edge Cache](/experiments/edge-cache)
+
+  </Card>
+
+  <Card title="Web Crypto API">
+    **Cryptography at the edge** via `crypto.subtle`.
+
+    Hash and sign data without external libraries:
+    - SHA digests
+    - HMAC and signing (extensible pattern)
+    - Standards-based Web Crypto
+
+    Used in:
+    - [Crypto Hash](/experiments/crypto-hash)
+
+  </Card>
+
+  <Card title="WebSockets">
+    **Bidirectional messaging** from Workers using `WebSocketPair`.
+
+    Upgrade HTTP to WebSocket and push messages from the edge:
+    - Real-time echo and chat patterns
+    - Works with browser and CLI clients
+    - Foundation for Durable Objects WebSockets
+
+    Used in:
+    - [WebSocket Echo](/experiments/websocket-echo)
+
+  </Card>
+</Cards>
+
+## Feature Comparison
+
+| Feature           | Type    | Use Case                  | Cold Start | Pricing Model         |
+| ----------------- | ------- | ------------------------- | ---------- | --------------------- |
+| Workers           | Compute | Edge functions            | &lt;1ms    | Per request           |
+| Workers AI        | AI/ML   | Inference                 | ~50ms      | Per inference         |
+| Browser Rendering | Compute | Screenshots, scraping     | ~2s        | Per session           |
+| D1                | Storage | Relational data           | ~5ms       | Reads + writes        |
+| KV                | Storage | Caching                   | &lt;1ms    | Reads + writes        |
+| R2                | Storage | Object storage            | ~10ms      | Storage + operations  |
+| Durable Objects   | Compute | Strongly consistent state | ~5ms       | Requests + storage    |
+| Queues            | Async   | Background processing     | ~10ms      | Messages + operations |
+| Cron Triggers     | Compute | Scheduled tasks           | ~5ms       | Per invocation        |
+| Cache API         | Storage | Edge HTTP cache           | &lt;1ms    | Per operation         |
+| Web Crypto        | Crypto  | Hashing, signing          | &lt;1ms    | Per request           |
+| WebSockets        | Network | Real-time messaging       | ~5ms       | Per connection        |
+
+## Architecture Patterns
+
+Experiments demonstrate several common patterns:
+
+### Fetch + Parse Pattern
+
+Fetch external HTML and parse with regex or HTMLRewriter:
+
+- Dependency Analyzer
+- Website Metadata Extractor
+- Website DevTools Inspector
+
+### Browser Rendering Pattern
+
+Launch Puppeteer via the `BROWSER` binding, navigate, then screenshot, PDF, metrics, or DOM evaluation:
+
+- Screenshot API
+- PDF API
+- Page Metrics
+- Rendered Text
+- Browser Links
+
+### AI Integration Pattern
+
+Fetch content, extract text, and summarize with Workers AI:
+
+- AI Website Summary
+- GitHub Repo Explainer
+
+### Storage Pattern
+
+Combine D1 (primary) with KV (cache) for optimal performance:
+
+- Link Shortener (D1 + KV)
+
+### KV Storage Pattern
+
+Simple key-value CRUD with a dedicated KV namespace:
+
+- KV Notes
+
+### Object Storage Pattern
+
+Public and private R2 buckets with direct URLs:
+
+- R2 Storage
+
+### Durable Objects Pattern
+
+Single named object for globally consistent state:
+
+- Durable Counter
+
+### Scheduled Tasks Pattern
+
+Cron handler writes metadata to KV; HTTP route reads status:
+
+- Cron Heartbeat
+
+### Queue Producer/Consumer Pattern
+
+HTTP enqueues messages; `queue()` handler processes asynchronously:
+
+- Task Queue
+
+### Edge Cache Pattern
+
+Fetch through `caches.default` and report cache hit/miss:
+
+- Edge Cache
+
+### Web Crypto Pattern
+
+Hash input with `crypto.subtle.digest` at the edge:
+
+- Crypto Hash
+
+### WebSocket Pattern
+
+Upgrade HTTP to WebSocket with `WebSocketPair`:
+
+- WebSocket Echo
+
+## Learn More
+
+<Card title="Cloudflare Developer Documentation" href="https://developers.cloudflare.com">
+  Official documentation for all Cloudflare developer products
+</Card>

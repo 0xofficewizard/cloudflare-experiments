@@ -1,0 +1,214 @@
+---
+title: "Website Metadata Extractor"
+description: "Extract title, description, Open Graph, Twitter Card, and canonical URL from any webpage - SEO metadata API"
+tags:
+  - scraping
+  - seo
+  - metadata
+  - open-graph
+  - canonical
+  - meta-tags
+---
+
+Extract comprehensive metadata from any webpage including title, description, Open Graph properties, and canonical URL. Perfect for building link previews, SEO analysis tools, or content aggregators.
+
+## API Reference
+
+### GET /metadata
+
+Extract metadata from a webpage by providing its URL.
+
+<TypeTable
+  type={{
+    url: {
+      description:
+        "The URL of the webpage to extract metadata from. Must be a valid HTTP or HTTPS URL.",
+      type: "string",
+      required: true,
+    },
+  }}
+/>
+
+#### Example Request
+
+```bash
+curl "https://your-worker.workers.dev/metadata?url=https://www.cloudflare.com"
+```
+
+#### Response Structure
+
+**`success`** `boolean`
+
+Indicates if the request was successful
+
+**`data`** `object`
+
+The extracted metadata from the webpage
+
+**`data.title`** `string | null`
+
+The page title extracted from the `<title>` tag
+
+**`data.description`** `string | null`
+
+The page description from meta tags or Open Graph description
+
+**`data.canonical`** `string | null`
+
+The canonical URL if specified in the page
+
+**`data.og`** `object`
+
+Open Graph metadata properties
+
+**`data.og.title`** `string` (optional)
+
+Open Graph title (og:title)
+
+**`data.og.description`** `string` (optional)
+
+Open Graph description (og:description)
+
+**`data.og.image`** `string` (optional)
+
+Open Graph image URL (og:image)
+
+**`data.og.type`** `string` (optional)
+
+Open Graph content type (og:type)
+
+**`data.og.url`** `string` (optional)
+
+Open Graph canonical URL (og:url)
+
+**`data.og.siteName`** `string` (optional)
+
+Open Graph site name (og:site_name)
+
+#### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "title": "Cloudflare - The Web Performance & Security Company",
+    "description": "Here at Cloudflare, we make the Internet work the way it should.",
+    "canonical": "https://www.cloudflare.com/",
+    "og": {
+      "title": "Cloudflare",
+      "description": "Here at Cloudflare, we make the Internet work the way it should.",
+      "image": "https://www.cloudflare.com/img/cf-facebook-card.png",
+      "type": "website",
+      "url": "https://www.cloudflare.com/",
+      "siteName": "Cloudflare"
+    }
+  }
+}
+```
+
+## Error Responses
+
+### Invalid URL
+
+```json
+{
+  "success": false,
+  "error": "Missing or invalid query parameter: url",
+  "code": "INVALID_URL"
+}
+```
+
+### Fetch Error
+
+```json
+{
+  "success": false,
+  "error": "HTTP 404",
+  "code": "FETCH_ERROR"
+}
+```
+
+## Technical Details
+
+- Built with [Hono](https://hono.dev/) framework
+- Runs on Cloudflare Workers
+- HTML parsing with regex-based extraction
+- Fetches and processes pages up to the configured size limit
+- Returns structured JSON with comprehensive metadata
+
+## Use Cases
+
+- **Link Previews**: Generate rich previews for shared links in chat applications
+- **SEO Analysis**: Audit metadata across multiple pages
+- **Content Aggregation**: Collect and display metadata from external sources
+- **Social Media Tools**: Extract Open Graph data for social sharing optimization
+- **Bookmark Managers**: Automatically fetch metadata when saving URLs
+
+## Limitations
+
+- Static HTML only; tags set by client-side JavaScript may be missing
+- Fetch timeout and HTML size limits on upstream pages
+- Single URL per request; no batch extraction
+
+## Use in your project
+
+<UseInYourProject
+  experiment="website-metadata-extractor"
+  platform={["Fetch API"]}
+  files={[
+    "src/lib/fetch.ts",
+    "src/lib/html.ts",
+    "src/lib/url.ts",
+    "src/constants/defaults.ts",
+    "examples/usage.ts",
+  ]}
+/>
+
+## Deployment
+
+<Steps>
+  <Step>
+
+### Click the deploy button
+
+    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/shrinathsnayak/cloudflare-experiments/tree/main/apps/experiments/website-metadata-extractor)
+
+  </Step>
+
+  <Step>
+
+### Deploy
+
+    No additional configuration required.
+
+  </Step>
+
+  <Step>
+
+### Test your deployment
+
+    ```bash
+    curl "https://your-worker.workers.dev/metadata?url=https://example.com"
+    ```
+
+  </Step>
+</Steps>
+
+## Local Development
+
+```bash
+cd apps/experiments/website-metadata-extractor
+npm install
+npm run dev
+```
+
+Test locally:
+
+```bash
+curl "http://localhost:8787/metadata?url=https://example.com"
+```
+
+## Cloudflare Features Used
+
+- **[Workers](https://developers.cloudflare.com/workers/)** - Edge compute runtime
+- **[Fetch API](https://developers.cloudflare.com/workers/runtime-apis/fetch/)** - HTTP requests for HTML metadata extraction

@@ -1,0 +1,162 @@
+---
+title: "Radar One Question"
+description: "Ask Cloudflare Radar one fact about a domain rank or ASN org/location - Internet intelligence API demo for agents"
+tags:
+  - network
+  - radar
+  - asn
+  - domain-rank
+  - internet-intelligence
+  - api
+status: new
+---
+
+One-shot **Cloudflare Radar** lookup for agents and tools: ask for a domain's global rank **or** an ASN's organization and location. Useful as an Internet-intelligence building block without pulling the full Radar API surface.
+
+## API Reference
+
+### `GET /radar`
+
+Returns one fact from Cloudflare Radar: domain ranking or ASN details.
+
+**Parameters**
+
+Provide **one** of:
+
+- **`domain`** `string` - Domain name (e.g., `cloudflare.com`)
+- **`asn`** `string` - ASN number with or without `AS` prefix (e.g., `13335` or `AS13335`)
+
+**Example request (domain)**
+
+```bash
+curl https://radar-one-question.example.workers.dev/radar?domain=cloudflare.com
+```
+
+**Example response**
+
+```json
+{
+  "type": "domain",
+  "target": "cloudflare.com",
+  "fact": "Domain rank in global top domains",
+  "ranking": 150
+}
+```
+
+**Example request (ASN)**
+
+```bash
+curl https://radar-one-question.example.workers.dev/radar?asn=13335
+```
+
+**Example response**
+
+```json
+{
+  "type": "asn",
+  "target": "AS13335",
+  "fact": "ASN owned by Cloudflare, Inc. (CLOUDFLARENET) in US"
+}
+```
+
+**Error responses**
+
+- `400` - Missing both `domain` and `asn`, or both provided
+- `502` - Radar API error or unreachable
+
+**Error codes**
+
+- `MISSING_PARAMETER` - Neither domain nor asn provided
+- `INVALID_PARAMETER` - Both domain and asn provided
+- `RADAR_ERROR` - Cloudflare Radar API returned an error
+
+## Use Cases
+
+- Domain reputation and ranking lookups from the edge
+- ASN ownership and geolocation queries
+- Network research tools and dashboards
+- Educational demos of Cloudflare Radar capabilities
+- Threat intelligence and abuse investigation workflows
+
+## Limitations
+
+- Returns one fact per request (either domain ranking or ASN details)
+- Domain ranking data reflects Cloudflare Radar's public dataset
+- ASN details depend on Radar's entity database
+- No persistent storage or caching
+- Rate limits determined by Cloudflare Radar API
+
+## Use in your project
+
+<UseInYourProject
+  experiment="radar-one-question"
+  platform={["Fetch API", "Cloudflare Radar API"]}
+  files={["src/lib/radar.ts", "examples/usage.ts"]}
+/>
+
+## Deployment
+
+<Steps>
+
+<Step>
+### Deploy to Cloudflare Workers
+
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/shrinathsnayak/cloudflare-experiments/tree/main/apps/experiments/radar-one-question)
+
+No bindings or secrets required.
+
+</Step>
+
+<Step>
+### Test your deployment
+
+```bash
+curl "https://radar-one-question.your-subdomain.workers.dev/radar?domain=cloudflare.com"
+```
+
+Or query an ASN:
+
+```bash
+curl "https://radar-one-question.your-subdomain.workers.dev/radar?asn=13335"
+```
+
+</Step>
+
+</Steps>
+
+## Local Development
+
+```bash
+cd apps/experiments/radar-one-question
+npm install
+npm run dev
+```
+
+The Worker runs at `http://localhost:8787`.
+
+**Test locally**
+
+```bash
+curl "http://localhost:8787/radar?domain=cloudflare.com"
+```
+
+## Cloudflare Features Used
+
+- [Workers](https://developers.cloudflare.com/workers/) - Edge compute platform
+- [Cloudflare Radar API](https://developers.cloudflare.com/radar/) - Internet intelligence and insights
+
+## Next Steps
+
+<Cards>
+  <Card
+    title="URL DNS Lookup"
+    href="/experiments/url-dns-lookup"
+    description="DNS records via DoH"
+  />
+  <Card title="Whereami" href="/experiments/whereami" description="Request geolocation metadata" />
+  <Card
+    title="Email Auth Checker"
+    href="/experiments/email-auth-checker"
+    description="SPF, DMARC, and DKIM analysis"
+  />
+</Cards>

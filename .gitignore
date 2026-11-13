@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Turborepo
+.turbo/
+
+# Next.js (docs app)
+.next/
+.source/
+.dev.vars
+.wrangler/
+dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs and OS
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Test / coverage
+coverage/
+.nyc_output/
